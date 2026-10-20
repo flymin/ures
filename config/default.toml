@@ -1,0 +1,122 @@
+# ures configuration, schema 1. Maps merge; arrays replace; explicit views select tabs.
+# Existing files are never overwritten. Profiles patch/add to the selected views.
+schema_version = 1
+# Starting TUI tab for `ures`; default text view for `ures report`.
+default_view = "tree"
+# Keys listed first, in this order; unlisted views follow in key order.
+# Use [] for alphabetical ordering. Profiles can override the array.
+tab_order = ["tree", "ps", "io", "groups", "compact", "oom", "checks"]
+sample_seconds = 1.0
+# Refresh interval for the TUI; -i overrides it for this run.
+interval_seconds = 2.0
+ascii = false
+
+# auto: detected limits; manual: configured budget; auto-or-manual: use a budget
+# only when no applicable kernel limit is found. Budgets never change the OS.
+[limits]
+mode = "auto"
+# cpu_cores = 4.0
+# memory = "8GiB"
+# cpu_cgroup = "/sys/fs/cgroup/cpu,cpuacct/login-users/{uid}"
+# memory_cgroup = "/sys/fs/cgroup/memory/login-users/{uid}"
+
+[checks.cpu]
+enabled = true
+warn = 85.0
+critical = 95.0
+[checks.memory]
+enabled = true
+warn = 85.0
+critical = 95.0
+[checks.oom]
+enabled = true
+# I/O, threads and FD collection is enabled when requested by a view or check.
+[checks.io]
+enabled = false
+[checks.threads]
+enabled = false
+[checks.fds]
+enabled = false
+
+[views.tree]
+name = "Tree"
+kind = "tree"
+columns = ["pid", "cpu", "mem", "self_mem", "command"]
+sort = "mem"
+top = 20
+[views.ps]
+name = "Processes"
+kind = "ps"
+columns = ["pid", "cpu", "mem", "rss", "command"]
+sort = "mem"
+top = 20
+[views.groups]
+name = "Groups"
+kind = "groups"
+columns = ["processes", "cpu", "mem", "command"]
+sort = "mem"
+top = 20
+[views.io]
+name = "I/O"
+kind = "ps"
+columns = ["pid", "read", "write", "threads", "fds", "command"]
+sort = "io"
+top = 20
+[views.compact]
+name = "Compact"
+kind = "tree"
+columns = ["pid", "cpu", "mem", "command"]
+sort = "mem"
+top = 12
+
+# Both interfaces select these exact keys: ures --view KEY / ures report --view KEY.
+# Every configured view becomes a TUI tab, ordered by tab_order. Omit name to
+# display the key. top=0 shows all rows; --top overrides the active view.
+[views.oom]
+name = "OOM"
+kind = "oom"
+top = 20
+[views.checks]
+name = "Checks"
+kind = "checks"
+top = 0
+
+# Columns can override title, width, min_width, max_width, optional, priority.
+# TUI widths are reserved, independent of values. Commands use remaining space.
+# width overrides a field's TUI reserve; min/max also apply to CLI output.
+# [columns.read]
+# width = 12
+# Smaller priority values are hidden first when optional columns do not fit.
+[columns.rss]
+optional = true
+priority = 10
+[columns.self_mem]
+optional = true
+priority = 20
+
+# Built-in theme names: ures config themes. --theme temporarily overrides name.
+# Color overrides are optional; omitted colors come from the selected theme.
+[theme]
+name = "dracula"
+# cpu = "#50fa7b"
+# selection_bg = "#44475a"
+# rainbow = true
+
+# Ordered application groups: first matching rule wins; otherwise executable name.
+# [[groups]]
+# name = "Workers"
+# match = "sample_worker\\.py|sample-watcher"
+
+# Named profiles patch the global settings. Select with --profile lab, or set
+# default_profile = "lab" at the TOP of this file.
+# [profiles.lab.limits]
+# mode = "manual"
+# cpu_cores = 4.0
+# memory = "8GiB"
+
+# External checks are opt-in. No shell is used unless explicitly in command.
+# [checks.queue]
+# enabled = true
+# command = ["/path/to/check-queue", "--json"]
+# interval_seconds = 10.0
+# timeout_seconds = 2.0

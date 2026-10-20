@@ -1,0 +1,48 @@
+# Profiles patch global configuration; themes are independent built-ins.
+# ures --config examples/profiles.toml --profile lab --theme light
+[theme]
+name = "dracula"
+
+[profiles.lab]
+interval_seconds = 1.0
+
+[profiles.lab.limits]
+mode = "auto-or-manual"
+cpu_cores = 4.0
+memory = "8GiB"
+
+[profiles.lab.theme]
+name = "gruvbox"
+rainbow = false
+
+[views.workers]
+kind = "tree"
+columns = ["pid", "cpu", "mem", "self_mem", "command"]
+sort = "mem"
+top = 30
+include = 'sample_worker|sample-watcher'
+exclude = 'sample-helper'
+
+[[groups]]
+name = "Workers"
+match = 'sample_worker\.py|sample-watcher'
+
+[[groups]]
+name = "Agents"
+match = 'sample-agent|sample-shell'
+
+[columns.command]
+title = "TASK"
+min_width = 12
+max_width = 100
+
+[checks.threads]
+enabled = true
+warn = 1000.0
+critical = 2000.0
+
+# [checks.zombies]
+# enabled = true
+# command = ["python3", "/path/to/check-zombies.py"]
+# interval_seconds = 10.0
+# timeout_seconds = 2.0

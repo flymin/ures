@@ -1,0 +1,32 @@
+[package]
+name = "ures"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+description = "Focused Linux user resources, process trees, and OOM records"
+license = "MIT"
+include = [
+    "src/**/*.rs", "tests/**/*.rs", "tests/*.py", "tests/fixtures/*.toml", "tests/snapshots/*.txt",
+    "examples/*.rs", "examples/*.py", "examples/*.toml", "config/**/*.toml",
+    "docs/*.md", "docs/*.json", "docs/assets/*.svg", "scripts/*.py", "scripts/*.sh",
+    "README.md", "README.zh-CN.md", "LICENSE", "CHANGELOG.md", "CONTRIBUTING.md",
+    "Cargo.lock", "build.sh", "release-files.txt", ".cargo/config.toml",
+    "!**/*.bak", "!**/*.orig", "!**/*.rej", "!docs/**/.*", "!examples/**/.*",
+    "!tests/**/.*", "!config/**/.*", "!src/**/.*", "!scripts/**/.*",
+]
+
+[dependencies]
+libc = "0.2"
+regex = "1"
+unicode-width = "0.2"
+unicode-segmentation = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.9"
+ratatui = { version = "0.30.2", default-features = false, features = ["crossterm"] }
+crossterm = "0.29"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="454" viewBox="0 0 1120 454" role="img" aria-label="ures fictional terminal preview">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b1021"/><stop offset="1" stop-color="#17213a"/></linearGradient></defs>
+<rect width="1120" height="454" rx="18" fill="url(#bg)"/>
+<rect x="15" y="15" width="1090" height="424" rx="12" fill="#101727" stroke="#2e3d58"/>
+<circle cx="40" cy="40" r="6" fill="#fa7186"/><circle cx="62" cy="40" r="6" fill="#f8c86a"/><circle cx="84" cy="40" r="6" fill="#65d7b1"/>
+<text x="1076" y="45" text-anchor="end" fill="#8291ab" font-family="monospace" font-size="13">ures · user resources</text>
+<path d="M16 62H1104" stroke="#27364f"/>
+<g font-family="'DejaVu Sans Mono',monospace" font-size="14.5" xml:space="preserve">
+<text x="36" y="94" fill="#b8a3ff">ures  alice@login.example  uid=1000  sample=2.00s  2030-01-02T03:04:05+00:00</text>
+<text x="36" y="119" fill="#74dfdf">CPU  [━━━━━·····]  1.93 / 4.00 cores  48.2%  [kernel upper bound]</text>
+<text x="36" y="144" fill="#f6ba70">MEM  [━━━━━━━━━━]  7.82GiB / 8.00GiB  97.7%  [kernel upper bound]</text>
+<text x="36" y="169" fill="#cdd8eb">USER 4 processes | MEM accounting: cgroup charge | process PSS/RSS 5.52GiB (4/4 PSS readable)</text>
+<text x="36" y="194" fill="#74dfdf">CPU throttle 2/20 periods, 18.5ms | OOM 3 cumulative, 0 new this sample</text>
+<text x="36" y="219" fill="#cdd8eb">CHARGE anon 3.00GiB | shared 2.50GiB | file cache 2.32GiB | peak 8.00GiB</text>
+<text x="36" y="244" fill="#cdd8eb"></text>
+<text x="36" y="269" fill="#9bafff"> PID  CPU(c)   TREE MEM   SELF MEM  COMMAND</text>
+<text x="36" y="294" fill="#cdd8eb">1000    1.43    5.02GiB   16.00MiB  [-] sample-shell</text>
+<text x="36" y="319" fill="#cdd8eb">1001    1.25    4.00GiB    4.00GiB  ├─python3 -B sample_worker.py --config /opt/ures-demo/config/worker.toml</text>
+<text x="36" y="344" fill="#cdd8eb">1002    0.10    1.00GiB    1.00GiB  └─sample-agent --job example-job</text>
+<text x="36" y="369" fill="#cdd8eb">2000    0.50  512.00MiB  512.00MiB  sample-watcher --watch /opt/ures-demo/data</text>
+<text x="36" y="394" fill="#cdd8eb"></text>
+<text x="36" y="419" fill="#8291ab">Illustrative session. CPU in cores; tree totals overlap; MEM=PSS.</text>
+</g></svg>

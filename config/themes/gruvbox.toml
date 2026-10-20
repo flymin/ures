@@ -1,0 +1,17 @@
+name = "gruvbox"
+foreground = "#ebdbb2"
+background = "#282828"
+accent = "#8ec07c"
+header = "#fabd2f"
+muted = "#d5c4a1"
+warning = "#fe8019"
+critical = "#fb4934"
+cpu = "#b8bb26"
+memory = "#fabd2f"
+tree = "#d5c4a1"
+read = "#8ec07c"
+write = "#fe8019"
+selection_fg = "#fbf1c7"
+selection_bg = "#504945"
+rainbow = true
+rainbow_colors = ["#b8bb26", "#fabd2f", "#fe8019", "#8ec07c", "#d3869b", "#83a598"]

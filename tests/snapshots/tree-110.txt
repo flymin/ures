@@ -1,0 +1,5 @@
+ PID  CPU(c)   TREE MEM   SELF MEM  COMMAND
+1000    1.43    5.02GiB   16.00MiB  [-] sample-shell
+1001    1.25    4.00GiB    4.00GiB  ├─python3 -B sample_worker.py --config /opt/ures-demo/config/worker.toml
+1002    0.10    1.00GiB    1.00GiB  └─sample-agent --job example-job
+2000    0.50  512.00MiB  512.00MiB  sample-watcher --watch /opt/ures-demo/data

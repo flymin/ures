@@ -1,0 +1,82 @@
+name: CI and release
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+env:
+  URES_RUST_VERSION: 1.99.0
+  CARGO_TERM_COLOR: always
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install "$URES_RUST_VERSION" --profile minimal --component rustfmt,clippy --target "$URES_TARGET"
+          rustup default "$URES_RUST_VERSION"
+        env:
+          URES_TARGET: ${{ matrix.target }}
+      - name: Test, build, verify and package
+        id: build
+        run: |
+          bash scripts/ci-build.sh
+          echo "version=$(python3 -B scripts/release.py version)" >> "$GITHUB_OUTPUT"
+        env:
+          URES_TARGET: ${{ matrix.target }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: ures-${{ matrix.target }}
+          path: |
+            dist/ures-v${{ steps.build.outputs.version }}-${{ matrix.target }}.tar.gz
+            dist/ures-v${{ steps.build.outputs.version }}-${{ matrix.target }}.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 14
+  release:
+    name: Publish complete release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          pattern: ures-*-unknown-linux-musl
+          path: dist
+          merge-multiple: true
+      - name: Verify complete artifact set
+        run: |
+          version=$(python3 -B scripts/release.py version)
+          for target in x86_64-unknown-linux-musl aarch64-unknown-linux-musl; do
+            archive="ures-v${version}-${target}.tar.gz"
+            python3 -B scripts/check_privacy.py --archive "dist/$archive"
+          done
+          python3 -B scripts/release.py checksums --directory dist
+      - name: Publish
+        run: bash scripts/publish-release.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ures external check v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "summary", "metrics"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "status": {"enum": ["ok", "warn", "critical", "unknown", "error"]},
+    "summary": {"type": "string"},
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "value", "unit"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "value": {"type": ["number", "null"]},
+          "unit": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

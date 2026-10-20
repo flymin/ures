@@ -1,0 +1,17 @@
+name = "light"
+foreground = "#1f1f1f"
+background = "#fffbeb"
+accent = "#036a96"
+header = "#846e15"
+muted = "#6c664b"
+warning = "#a34d14"
+critical = "#cb3a2a"
+cpu = "#14710a"
+memory = "#846e15"
+tree = "#6c664b"
+read = "#036a96"
+write = "#a34d14"
+selection_fg = "#1f1f1f"
+selection_bg = "#cfcfde"
+rainbow = true
+rainbow_colors = ["#14710a", "#846e15", "#a34d14", "#036a96", "#a3144d", "#644ac9"]

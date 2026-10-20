@@ -1,0 +1,94 @@
+# ures configuration, schema 1. Maps merge; arrays replace. Existing files are never overwritten.
+schema_version = 1
+default_view = "tree"
+sample_seconds = 1.0
+interval_seconds = 2.0
+ascii = false
+
+# auto: detected limits; manual: configured budget; auto-or-manual: use a budget
+# only when no applicable kernel limit is found. Budgets never change the OS.
+[limits]
+mode = "auto"
+# cpu_cores = 4.0
+# memory = "8GiB"
+# cpu_cgroup = "/sys/fs/cgroup/cpu,cpuacct/login-users/{uid}"
+# memory_cgroup = "/sys/fs/cgroup/memory/login-users/{uid}"
+
+[checks.cpu]
+enabled = true
+warn = 85.0
+critical = 95.0
+[checks.memory]
+enabled = true
+warn = 85.0
+critical = 95.0
+[checks.oom]
+enabled = true
+# I/O, threads and FD collection is enabled when requested by a view or check.
+[checks.io]
+enabled = false
+[checks.threads]
+enabled = false
+[checks.fds]
+enabled = false
+
+[views.tree]
+kind = "tree"
+columns = ["pid", "cpu", "mem", "self_mem", "command"]
+sort = "mem"
+top = 20
+[views.ps]
+kind = "ps"
+columns = ["pid", "cpu", "mem", "rss", "command"]
+sort = "mem"
+top = 20
+[views.groups]
+kind = "groups"
+columns = ["processes", "cpu", "mem", "command"]
+sort = "mem"
+top = 20
+[views.io]
+kind = "ps"
+columns = ["pid", "read", "write", "threads", "fds", "command"]
+sort = "io"
+top = 20
+[views.compact]
+kind = "tree"
+columns = ["pid", "cpu", "mem", "command"]
+sort = "mem"
+top = 12
+
+# Columns can override title, min_width, max_width, optional, priority.
+# Smaller priority values are hidden first when optional columns do not fit.
+[columns.rss]
+optional = true
+priority = 10
+[columns.self_mem]
+optional = true
+priority = 20
+
+[theme]
+accent = "cyan"
+header = "magenta"
+muted = "gray"
+warning = "yellow"
+critical = "red"
+
+# Ordered application groups: first matching rule wins; otherwise executable name.
+# [[groups]]
+# name = "Workers"
+# match = "sample_worker\\.py|sample-watcher"
+
+# Named profiles patch the global settings. Select with --profile lab, or set
+# default_profile = "lab" at the TOP of this file.
+# [profiles.lab.limits]
+# mode = "manual"
+# cpu_cores = 4.0
+# memory = "8GiB"
+
+# External checks are opt-in. No shell is used unless explicitly in command.
+# [checks.queue]
+# enabled = true
+# command = ["/path/to/check-queue", "--json"]
+# interval_seconds = 10.0
+# timeout_seconds = 2.0
