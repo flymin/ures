@@ -69,8 +69,8 @@ cargo test --locked
 cargo run -- --help
 ```
 
-`build.sh` 完成检查并将静态二进制写入 `target/<target>/release/ures`。
-需要安装时，通过 `URES_INSTALL_DIR` 指定目标目录。构建和测试详情见[贡献指南](CONTRIBUTING.md)。
+`build.sh` 完成检查、将静态二进制写入 `target/<target>/release/ures`，并安装到 `~/.local/bin/ures`。
+可用 `URES_INSTALL_DIR=/path/to/bin ./build.sh` 自定义安装目录。构建和测试详情见[贡献指南](CONTRIBUTING.md)。
 
 ## 配置自己的视图
 

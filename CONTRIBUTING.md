@@ -7,7 +7,8 @@ and runs CLI/PTY smoke checks. Its output is `target/<target>/release/ures`, or 
 equivalent path under `CARGO_TARGET_DIR`. Set `URES_TARGET` to select the target
 and `URES_PYTHON` to select a Python 3.11+ interpreter. Toolchains are selected
 through `PATH` or `rustup`; `CARGO_BUILD_JOBS` controls build parallelism.
-Installation is optional: set `URES_INSTALL_DIR` to an explicit destination.
+The executable is installed to `~/.local/bin/ures` by default.
+Set `URES_INSTALL_DIR` to override the destination; CI uses its build directory.
 
 Keep collection, sampling, analysis and rendering separate. New metrics must
 describe their unit, scope, availability and freshness. Unknown values must not

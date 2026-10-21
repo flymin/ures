@@ -79,8 +79,8 @@ cargo run -- --help
 ```
 
 `build.sh` runs the checks and writes the static executable to
-`target/<target>/release/ures`. Set `URES_INSTALL_DIR` to install it to a
-directory of your choice.
+`target/<target>/release/ures`, then installs it to `~/.local/bin/ures`.
+Override the installation directory with `URES_INSTALL_DIR=/path/to/bin ./build.sh`.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for build and test details.
 
 ## Make the view yours

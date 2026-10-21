@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 URES_PROJECT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-URES_INSTALL_DIR=${URES_INSTALL_DIR:-}
+URES_INSTALL_DIR=${URES_INSTALL_DIR:-$HOME/.local/bin}
 cd "$URES_PROJECT"
 source "$URES_PROJECT/scripts/env.sh"
 CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-$URES_PROJECT/target}
@@ -36,11 +36,9 @@ if [[ "$URES_LINKAGE" == *'=>'* ]]; then printf 'Refusing a dynamically linked b
 "$URES_BINARY" --version
 "$URES_PYTHON" -B tests/smoke.py "$URES_BINARY" "$CARGO_TARGET_DIR/$URES_TARGET/debug/examples/terminal-panic"
 printf 'Built %s\n' "$URES_BINARY"
-if [[ -n "$URES_INSTALL_DIR" ]]; then
-    mkdir -p "$URES_INSTALL_DIR"
-    URES_PENDING_INSTALL=$(mktemp "$URES_INSTALL_DIR/.ures.XXXXXX")
-    trap 'rm -f -- "$URES_PENDING_INSTALL"' EXIT
-    install -m 755 "$URES_BINARY" "$URES_PENDING_INSTALL"
-    mv -f -- "$URES_PENDING_INSTALL" "$URES_INSTALL_DIR/ures"
-    printf 'Installed %s/ures\n' "$URES_INSTALL_DIR"
-fi
+mkdir -p "$URES_INSTALL_DIR"
+URES_PENDING_INSTALL=$(mktemp "$URES_INSTALL_DIR/.ures.XXXXXX")
+trap 'rm -f -- "$URES_PENDING_INSTALL"' EXIT
+install -m 755 "$URES_BINARY" "$URES_PENDING_INSTALL"
+mv -f -- "$URES_PENDING_INSTALL" "$URES_INSTALL_DIR/ures"
+printf 'Installed %s/ures\n' "$URES_INSTALL_DIR"
