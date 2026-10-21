@@ -22,5 +22,5 @@ fn main() {
     for line in table.lines {
         println!("{line}");
     }
-    println!("\nIllustrative session. CPU in cores; tree totals overlap; MEM=PSS.");
+    println!("\nIllustrative session.");
 }

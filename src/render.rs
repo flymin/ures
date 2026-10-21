@@ -504,9 +504,6 @@ pub fn table_with_layout(
         rows.len(),
         view.sort
     )];
-    if view.kind == "tree" {
-        notes.push("CPU and TREE MEM include descendants, including hidden rows. SELF MEM is root-only; do not sum tree rows.".into());
-    }
     if options
         .pid
         .is_some_and(|pid| !report.processes.contains_key(&pid))

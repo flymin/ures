@@ -3,7 +3,6 @@
 `ures report --json` writes one JSON object. `ures report --json -i2` writes one complete
 object per line (NDJSON), without terminal escapes or table truncation.
 Use `--count N` to stop the stream after N snapshots. JSON output requires an explicit command; plain `ures` always opens the TUI.
-Migrate old root JSON invocations to `ures report --json`.
 It retains the complete selected-user process set and retained OOM source records;
 view regexes, row limits and `--since` affect human presentation. JSON consumers
 can filter the explicit event timestamps without losing the original records.
@@ -32,8 +31,8 @@ I/O fields ending `_bps` are bytes/second. Thread/FD values are counts.
 
 `summary.processes` is a disjoint sum of visible selected-user processes, excluding
 the collector itself. `fallback`, `threads_read`, `fds_read` and `io_read` describe
-coverage; `io_partial` marks missing task data. Inclusive tree totals are derived
-for presentation and must not be added together. PSS totals need not equal a
+coverage; `io_partial` marks missing task data. Tree rows show a process and its
+descendants; `self_mem` shows that process's own memory. PSS totals can differ from a
 cgroup's charged memory. Raw cgroup memory values are bytes, `cores` and
 `own_cores` are core bounds, and CPU timing fields explicitly end in `_ns`.
 `own_*` records constraints on the selected group; effective `cores`/`limit` can
@@ -53,3 +52,13 @@ Package updates may add optional fields within schema 1. Consumers should ignore
 unknown fields and check `schema_version`; incompatible meaning changes require
 a new schema version. The Rust library exposes the same typed report for custom
 frontends; deserializing a report does not resume its sampler state.
+
+## Display units and coverage
+
+CPU columns use cores, so `1.00` represents one CPU. Memory columns prefer PSS,
+which apportions shared pages; `*` marks RSS fallback, `~` marks partial coverage,
+and `?` marks unavailable data. FD totals count descriptors.
+
+CPU and I/O rates use changes between samples. Processes that exit between
+samples may leave unobserved work. Logical I/O uses live-thread counters;
+storage counters describe block I/O and may exclude network filesystem traffic.

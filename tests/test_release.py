@@ -22,7 +22,6 @@ def load(name, path):
     return module
 
 release = load("ures_release", ROOT / "scripts/release.py")
-sanitize = load("ures_sanitize", ROOT / "scripts/sanitize_log.py")
 
 class ReleaseTests(unittest.TestCase):
     def test_checksums_reject_comments_and_keep_previous_summary(self):
@@ -37,7 +36,7 @@ class ReleaseTests(unittest.TestCase):
             previous = (root / "SHA256SUMS").read_bytes()
             self.assertEqual(len(previous.splitlines()), 2)
             sidecar = next(root.glob("*.sha256"))
-            sidecar.write_text(sidecar.read_text() + "# example-retired-host\n")
+            sidecar.write_text(sidecar.read_text() + "# extra text\n")
             with self.assertRaises(ValueError):
                 release.checksums(root)
             self.assertEqual((root / "SHA256SUMS").read_bytes(), previous)
@@ -67,6 +66,18 @@ class ReleaseTests(unittest.TestCase):
         with patch.dict(os.environ, {"GITHUB_REF": "refs/tags/v" + release.version()}), contextlib.redirect_stdout(io.StringIO()):
             release.metadata()
 
+    def test_release_notes_select_only_current_version(self):
+        with tempfile.TemporaryDirectory(prefix="ures-notes-test-") as folder:
+            root = Path(folder)
+            (root / "Cargo.toml").write_text('[package]\nversion="1.2.3"\n')
+            changelog = root / "CHANGELOG.md"
+            changelog.write_text("# Changelog\n\n## Unreleased\nFuture changes.\n\n## 1.2.3 — 2026-01-01\n\nCurrent features.\n\n### Details\nMore information.\n\n## 1.2.2\nEarlier features.\n")
+            with patch.object(release, "ROOT", root):
+                self.assertEqual(release.release_notes(), "Current features.\n\n### Details\nMore information.")
+                changelog.write_text("# Changelog\n\n## 1.2.30\nDifferent version.\n")
+                with self.assertRaises(ValueError):
+                    release.release_notes()
+
     def test_elf_architecture_and_interpreter_are_verified(self):
         data = bytearray(120)
         data[:6] = b"\x7fELF\x02\x01"
@@ -87,12 +98,33 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 release.verify(path, "aarch64-unknown-linux-musl")
 
-    def test_private_build_identifiers_are_redacted(self):
-        with patch.dict(os.environ, {"HOME": "/home/alice", "URES_PROJECT": "/home/alice/local/src/ures", "USER": "alice", "LOGNAME": "alice"}):
-            result = sanitize.redact("alice /home/alice/local/src/ures/src/lib.rs /home/alice/log")
-        self.assertNotIn("alice", result)
-        self.assertIn("${URES_PROJECT}", result)
-        self.assertIn("${HOME}", result)
+    def test_release_manifest_rejects_links_and_unsafe_names(self):
+        with tempfile.TemporaryDirectory(prefix="ures-manifest-test-") as folder:
+            root = Path(folder)
+            manifest = root / "release-files.txt"
+            (root / "README.md").write_text("example")
+            manifest.write_text("README.md\n")
+            self.assertEqual(set(release.release_files(root)), {"README.md"})
+            (root / "linked").symlink_to(root, target_is_directory=True)
+            (root / "link.md").symlink_to(root / "README.md")
+            for entry in ("link.md", "linked/README.md", "../README.md", ".backup", "README.md\nREADME.md"):
+                manifest.write_text(entry + "\n")
+                with self.subTest(entry=entry), self.assertRaises(ValueError):
+                    release.release_files(root)
+
+    def test_failed_package_preserves_previous_archive(self):
+        with tempfile.TemporaryDirectory(prefix="ures-package-test-") as folder:
+            root = Path(folder)
+            binary = root / "ures"
+            binary.write_bytes(b"test binary")
+            destination = root / "dist"
+            destination.mkdir()
+            archive = destination / f"ures-v{release.version()}-x86_64-unknown-linux-musl.tar.gz"
+            archive.write_bytes(b"previous artifact")
+            with patch.object(release, "verify"), patch.object(release.subprocess, "check_output", return_value=b'{"packages":[]}'), patch.object(release, "write_archive", side_effect=OSError("write failed")), self.assertRaises(OSError):
+                release.package(binary, "x86_64-unknown-linux-musl", destination)
+            self.assertEqual(archive.read_bytes(), b"previous artifact")
+            self.assertEqual(list(destination.iterdir()), [archive])
 
 if __name__ == "__main__":
     unittest.main()

@@ -67,7 +67,7 @@ start additional samplers. I/O/FD/thread collection follows the active view and
 enabled checks. Narrow terminals scroll the tab strip to keep the selected label
 visible, with Unicode-safe truncation for a label wider than the viewport.
 
-## Defaults and compatibility
+## Configuration defaults
 
 - Without a root `views` table, the full embedded view set is loaded.
 - With an explicit root `views` table, only its keys are loaded. A partial builtin
@@ -78,15 +78,8 @@ visible, with Unicode-safe truncation for a label wider than the viewport.
   selected view set, with custom keys appended alphabetically. Explicit orders
   must reference configured view keys, rather than display names. Profiles may
   override the array with `[profiles.NAME] tab_order = [...]` (on separate lines).
-- Profiles keep the established patch semantics: they can modify or add views
+- Profiles can modify or add views
   to the selected root set. All profiles are validated even when unselected.
-- Existing schema-1 configurations remain valid without `name` or new theme
-  settings. An old five-view config produces those five tabs; OOM/Checks appear
-  only after adding entries for them. Existing files are never rewritten.
-- To add OOM and Checks to an existing config, append `[views.oom]` with
-  `kind = "oom"` and `[views.checks]` with `kind = "checks"`. Add `name` as desired.
-  Reports use those same keys with `ures report --view oom` or
-  `ures report --view checks`; absent keys are unavailable in both interfaces.
 
 See [default.toml](../config/default.toml) for the complete template and
 [README.zh-CN.md](../README.zh-CN.md#交互操作) for Chinese usage examples.

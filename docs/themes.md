@@ -38,6 +38,7 @@ still override that palette, including when `--theme` is used. `config show`
 displays the fully resolved colors for debugging; it is not the sparse template.
 Copying all those colors into `[theme]` explicitly fixes every color, so a later
 theme switch will keep them. The default template only sets `name`.
+Color overrides without a theme name use the default Dracula palette.
 
 ## Profiles override global configuration
 
@@ -80,28 +81,12 @@ selected. Unknown theme names, colors, profile names and misspelled keys fail
 with an error. To add a built-in palette, create its TOML under `config/themes`,
 register it in `src/theme.rs`, and run the registry and TUI tests.
 
-## Migration
-
-- Replace old `ures --profile light` / `--profile gruvbox` theme shortcuts with
-  `--theme light` / `--theme gruvbox`.
-- Replace an implicit theme selection such as root `default_profile = "light"`
-  with `[theme] name = "light"` (on separate lines). Keep `default_profile` when
-  it selects one of your own declared global override profiles.
-- Explicitly declared user profiles continue to work, including profiles with
-  a `[profiles.NAME.theme]` override. No profile names are reserved for themes.
-- Legacy flat `[theme]` color overrides without `name` still apply to Dracula.
-
 ## Upstream references
-
-The palettes were compared using their original GitHub repositories rather than
-mixing unrelated individual colors:
 
 - [Dracula Classic and Alucard OSS palettes](https://github.com/dracula/dracula-theme#color-palette-oss):
   default and light colors, including foreground/background and selection tokens.
 - [Gruvbox palette definitions](https://github.com/morhetz/gruvbox/blob/master/colors/gruvbox.vim#L78):
   warm alternative using the bright metric colors and light text tokens.
-- [Catppuccin](https://github.com/catppuccin/catppuccin): reviewed as a pastel alternative;
-  the default uses Dracula's stronger accents for this dashboard.
 
 These are adaptations of upstream palettes, not official ports. The regular and
 secondary text contrast is checked against each built-in theme's background. TUI tests

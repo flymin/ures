@@ -1,13 +1,13 @@
 # Contributing
 
-Keep the package, documentation and distribution version at **0.1.0** during
-this ongoing iteration. Do not bump it unless the user explicitly requests a
-version change or release. Record changes under 0.1.0 in the changelog.
-
 Use Rust 1.99.0 with rustfmt and Clippy. Normal `cargo test --locked` and
 `cargo clippy --locked --all-targets -- -D warnings` work with an existing host
 toolchain. `build.sh` additionally builds a native musl executable, verifies it,
-runs CLI/PTY smoke checks and installs it. It does not install toolchains.
+and runs CLI/PTY smoke checks. Its output is `target/<target>/release/ures`, or the
+equivalent path under `CARGO_TARGET_DIR`. Set `URES_TARGET` to select the target
+and `URES_PYTHON` to select a Python 3.11+ interpreter. Toolchains are selected
+through `PATH` or `rustup`; `CARGO_BUILD_JOBS` controls build parallelism.
+Installation is optional: set `URES_INSTALL_DIR` to an explicit destination.
 
 Keep collection, sampling, analysis and rendering separate. New metrics must
 describe their unit, scope, availability and freshness. Unknown values must not
@@ -26,15 +26,12 @@ Before proposing a change:
 cargo fmt --check
 cargo test --locked
 cargo clippy --locked --all-targets -- -D warnings
-python3 -B scripts/check_privacy.py
+python3 -B -m unittest discover -s tests -p 'test_*.py'
 python3 -B tests/smoke.py target/debug/ures
 ```
 
-Update the English and Chinese READMEs when behavior changes. Keep examples,
-screenshots and fixtures fictional. Do not include account paths, local build
-logs, credentials, real process arguments or compiler caches in commits.
-See [publication privacy](docs/privacy.md) for artifact checks and the external
-private-term file. Update `release-files.txt` when adding release documentation.
+Update the English and Chinese READMEs when behavior changes. Release archive
+contents are listed in `release-files.txt`; update it when adding documentation.
 
 Version the extension and snapshot protocols independently from package releases.
 Document incompatible data changes and update protocol tests. Release tags must
@@ -53,6 +50,6 @@ python3 scripts/render-tui-preview.py .logs/tui-preview.json docs/assets/tui-pre
 
 The selection regression checks every cell, including gaps and trailing space.
 The SVG renderer uses only the Python standard library; no image packages are
-needed to regenerate it. Select your project's existing compiler/Python setup.
+needed to regenerate it.
 The export also writes `.light.json` and `.gruvbox.json` siblings for the built-in
 alternatives; their previews use the same cells, including painted backgrounds.

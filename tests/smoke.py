@@ -21,8 +21,8 @@ def run(args, env, code=0):
     try:
         result = subprocess.run([BINARY, *args], env=env, text=True, capture_output=True, timeout=30)
     except subprocess.TimeoutExpired:
-        raise AssertionError("CLI timed out; live arguments/output withheld") from None
-    assert result.returncode == code, f"CLI exit status {result.returncode}; live arguments/output withheld"
+        raise AssertionError("CLI timed out") from None
+    assert result.returncode == code, f"CLI exit status {result.returncode}; expected {code}"
     return result.stdout
 
 def terminal_check(env, config, exit_kind, labels=(), extra=(), bare=False):
@@ -49,13 +49,21 @@ def terminal_check(env, config, exit_kind, labels=(), extra=(), bare=False):
                 output.extend(os.read(master, 65536))
             if child.poll() is not None:
                 break
-        assert marker in output, "TUI readiness marker missing; live screen withheld"
+        assert marker in output, "TUI readiness marker missing"
         for label in labels:
-            assert label.encode() in output, "configured tab label missing; live screen withheld"
+            assert label.encode() in output, "configured tab label missing"
         if exit_kind != "panic":
-            os.write(master, b"?x\t\t\t\t\tcmRR /no-match\r\x1b")
             fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 30, 120, 0, 0))
-            os.kill(child.pid, signal.SIGWINCH)
+            until = time.monotonic() + 8
+            while b"\x1b[30;" not in output and time.monotonic() < until:
+                if select.select([master], [], [], 0.1)[0]:
+                    output.extend(os.read(master, 65536))
+                if child.poll() is not None:
+                    break
+            assert b"\x1b[30;" in output, "TUI did not redraw after resize"
+            # Complete the resize before sending input; keep the view running
+            # until the requested exit method is sent.
+            os.write(master, b"?x\t\t\t\t\tcmRR /no-match\r")
         # Drain while exiting: a full PTY output buffer can otherwise block the app.
         if exit_kind == "q":
             os.write(master, b"q")
@@ -69,7 +77,7 @@ def terminal_check(env, config, exit_kind, labels=(), extra=(), bare=False):
                 output.extend(os.read(master, 65536))
         assert child.poll() is not None, "TUI did not exit promptly"
         expected = {"q": (0,), "ctrl-c": (130,), "sigterm": (143,), "panic": (101,)}[exit_kind]
-        assert child.returncode in expected, "unexpected TUI exit status; live screen withheld"
+        assert child.returncode in expected, f"TUI exit status {child.returncode} for {exit_kind}; expected {expected}"
         while select.select([master], [], [], 0.05)[0]:
             output.extend(os.read(master, 65536))
         assert termios.tcgetattr(slave) == before, "terminal state was not restored"

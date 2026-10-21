@@ -574,7 +574,7 @@ impl App {
             .map_or(0, |r| (util::unix_now() - r.unix_seconds).max(0));
         let footer = if self.editing {
             format!(
-                "Search: {}_  (Enter apply · Esc clear)\nMEM=PSS, *=RSS fallback, ~=partial. Tree totals overlap.",
+                "Search: {}_  (Enter apply · Esc clear)\nMEM=PSS, *=RSS fallback, ~=partial.",
                 self.search
             )
         } else {

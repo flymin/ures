@@ -14,8 +14,5 @@ about: Incorrect accounting, unexpected output, or terminal behavior
 - Terminal and dimensions, if relevant:
 
 **Evidence**
-Include a minimal configuration and relevant output. Replace private paths,
-usernames, numeric UIDs, hostnames, IP addresses, cluster/mount paths and process
-arguments with fictional equivalents. Do not attach live JSON, logs or terminal
-captures without reviewing them. See docs/privacy.md. State whether the
-problem also occurs with a numeric UID and the built-in configuration.
+Include a minimal configuration and relevant output. State whether the problem
+also occurs with the built-in configuration.

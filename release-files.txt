@@ -10,7 +10,6 @@ docs/architecture.md
 docs/cli.md
 docs/check.schema.json
 docs/extensions.md
-docs/privacy.md
 docs/snapshots.md
 docs/themes.md
 docs/views.md

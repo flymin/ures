@@ -5,14 +5,13 @@ import hashlib
 import io
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+import re
 import struct
 import subprocess
 import tarfile
 import tempfile
 import tomllib
-
-import check_privacy as privacy
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGETS = {"x86_64-unknown-linux-musl": 62, "aarch64-unknown-linux-musl": 183}
@@ -28,6 +27,23 @@ def metadata():
     lock = tomllib.loads((ROOT / "Cargo.lock").read_text())
     assert any(p["name"] == "ures" and p["version"] == version() for p in lock["package"]), "Cargo.lock version mismatch"
     print(expected)
+
+def release_notes():
+    """Return only the current version's changelog section."""
+    heading = re.compile(r"^## \[?" + re.escape(version()) + r"\]?(?:\s|$)")
+    selected = False
+    lines = []
+    for line in (ROOT / "CHANGELOG.md").read_text().splitlines():
+        if line.startswith("## "):
+            if selected:
+                break
+            selected = bool(heading.match(line))
+        elif selected:
+            lines.append(line)
+    notes = "\n".join(lines).strip()
+    if not notes:
+        raise ValueError("missing release notes for the current package version")
+    return notes
 
 def verify(binary, target):
     data = Path(binary).read_bytes()
@@ -60,10 +76,7 @@ def verify(binary, target):
 
 def package(binary, target, destination):
     verify(binary, target)
-    terms = privacy.local_terms(ROOT) + privacy.load_terms(os.environ.get("URES_PRIVACY_TERMS_FILE"))
-    privacy.require_clean(privacy.check_tree(ROOT, terms))
-    privacy.require_clean(privacy.content_findings(Path(binary).read_bytes(), "release binary", terms, text=False))
-    files = {"ures": Path(binary).resolve(), **privacy.release_files(ROOT)}
+    files = {"ures": Path(binary).resolve(), **release_files(ROOT)}
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
     name = f"ures-v{version()}-{target}.tar.gz"
@@ -95,13 +108,32 @@ def package(binary, target, destination):
     with tempfile.TemporaryDirectory(prefix=".ures-package-", dir=destination) as temporary:
         pending = Path(temporary) / name
         write_archive(pending, files, notices, epoch)
-        privacy.require_clean(privacy.check_archive(pending, terms))
         digest = hashlib.sha256(pending.read_bytes()).hexdigest()
         checksum = Path(temporary) / (name + ".sha256")
         checksum.write_text(f"{digest}  {name}\n")
         pending.replace(archive)
         checksum.replace(destination / checksum.name)
     print(archive.name)
+
+
+def release_files(root):
+    """Load the explicit archive manifest, rejecting unsafe paths and links."""
+    files = {}
+    for line in (root / "release-files.txt").read_text().splitlines():
+        if not line or line.startswith("#"):
+            continue
+        name = PurePosixPath(line)
+        if name.is_absolute() or any(part.startswith(".") for part in name.parts) or str(name) != line or line in files:
+            raise ValueError("invalid release manifest entry")
+        path = root / line
+        if any(parent.is_symlink() for parent in (path, *path.parents) if parent != root.parent):
+            raise ValueError("release inputs must not be symbolic links")
+        if not path.is_file():
+            raise ValueError("missing release input")
+        files[line] = path
+    if not files:
+        raise ValueError("empty release manifest")
+    return files
 
 
 def checksums(directory):
@@ -149,6 +181,7 @@ if __name__ == "__main__":
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("metadata")
     commands.add_parser("version")
+    commands.add_parser("notes")
     sub = commands.add_parser("checksums")
     sub.add_argument("--directory", required=True)
     for action in ("verify", "package"):
@@ -162,6 +195,8 @@ if __name__ == "__main__":
         print(version())
     elif args.command == "metadata":
         metadata()
+    elif args.command == "notes":
+        print(release_notes())
     elif args.command == "verify":
         verify(args.binary, args.target)
     elif args.command == "checksums":

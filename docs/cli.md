@@ -91,20 +91,7 @@ action. Small pages such as `config path` show the same help for both.
 `--help`; append `-h` for the brief version. `ures help --help` explains help
 syntax. Unknown commands/actions/flags are rejected even when requesting help.
 
-## Migration during 0.1.0
+## Exit status
 
-| Removed or changed entry | Use instead |
-| --- | --- |
-| `ures tui` | `ures` |
-| `ures watch` | `ures` for interaction; `ures report -i2` for automation |
-| `ures --json` | `ures report --json` |
-| `--limit N` | `--top N` or `-nN` |
-| `ures tree` / `ps` / `groups` / `oom` / `checks` | `ures report --view NAME` with an existing config key |
-| Bare `ures config` producing TOML | `ures config show` |
-| `ures config views` | Read `views` and `tab_order` in the configuration |
-
-Conventional short options remain. Existing configuration
-files are never rewritten; command syntax selects presentation, and profiles
-override settings. Normal completion/help/version exit with status 0, usage or
-configuration errors with status 2, and signal exits with 128 + signal number.
-The package version remains 0.1.0.
+Normal completion, help and version output exit with status 0. Usage and
+configuration errors exit with status 2; signals produce 128 + the signal number.

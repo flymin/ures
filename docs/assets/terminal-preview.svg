@@ -19,5 +19,5 @@
 <text x="36" y="344" fill="#cdd8eb">1002    0.10    1.00GiB    1.00GiB  └─sample-agent --job example-job</text>
 <text x="36" y="369" fill="#cdd8eb">2000    0.50  512.00MiB  512.00MiB  sample-watcher --watch /opt/ures-demo/data</text>
 <text x="36" y="394" fill="#cdd8eb"></text>
-<text x="36" y="419" fill="#8291ab">Illustrative session. CPU in cores; tree totals overlap; MEM=PSS.</text>
+<text x="36" y="419" fill="#8291ab">Illustrative session.</text>
 </g></svg>

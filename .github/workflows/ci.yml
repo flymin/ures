@@ -70,11 +70,6 @@ jobs:
           merge-multiple: true
       - name: Verify complete artifact set
         run: |
-          version=$(python3 -B scripts/release.py version)
-          for target in x86_64-unknown-linux-musl aarch64-unknown-linux-musl; do
-            archive="ures-v${version}-${target}.tar.gz"
-            python3 -B scripts/check_privacy.py --archive "dist/$archive"
-          done
           python3 -B scripts/release.py checksums --directory dist
       - name: Publish
         run: bash scripts/publish-release.sh

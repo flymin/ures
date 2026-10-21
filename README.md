@@ -2,9 +2,6 @@
 
 # ures
 
-Fixtures and previews use fictional data. See [publication privacy](docs/privacy.md)
-before sharing runtime output or building a release.
-
 ### Follow the user. Find the process tree.
 
 ![Version](https://img.shields.io/badge/version-0.1.0-8b5cf6)
@@ -15,15 +12,13 @@ before sharing runtime output or building a release.
 
 **English** · [简体中文](README.zh-CN.md)
 
-<img src="docs/assets/tui-preview.svg" alt="ures TUI: ordered tabs, semantic CPU/memory colors and a continuous selected row" width="1100">
+<img src="docs/assets/tui-preview.svg" alt="ures interactive resource dashboard" width="1100">
 
-<sub>Illustrative data. CPU is measured in cores; tree totals overlap.</sub>
+<sub>Interactive dashboard with sample data.</sub>
 
 </div>
 
-`ures` answers a focused question: **which process, process tree, or application is consuming this user's resources?** It keeps quota pressure, CPU throttling and OOM evidence beside the processes that explain them. `ures` opens the interactive TUI by default; `report` exports text or JSON, with `-i` for repeated snapshots. All modes share the same collection and analysis code.
-
-Development continues at **0.1.0**; routine iterations do not change the version.
+`ures` shows **which processes, process trees, and applications are consuming a Linux user's resources**. Its interactive dashboard combines CPU and memory usage, quota pressure, I/O and OOM history. Use `report` for text or JSON output and `-i` for repeated snapshots.
 
 | Find out | Command |
 | --- | --- |
@@ -53,41 +48,46 @@ ures config path               # Find your configuration
 ures config themes             # List built-in themes
 ```
 
-`ures report --view NAME` selects an exact configured view key; `report`
-without `--view` uses `default_view`. Add `-i` for repeated reports. Use `ures report --json` for script output. In a pipe, use `ures report` (add `-i` to repeat):
-bare `ures` requires terminal input and output and explains this before creating
-configuration. See the [command reference and migration notes](docs/cli.md).
+`--view NAME` selects a configured view; omitting it uses `default_view`.
+Use `ures` in an interactive terminal, or `ures report` in a pipe or script.
+See the [command reference](docs/cli.md) for the full interface.
 
 Use `-h` for brief help or `--help` for all options at the current command/action.
 Press `?` inside the TUI for key bindings.
 
-CPU columns use **cores**, so `1.00` means one CPU. Tree CPU and TREE MEM include descendants; SELF MEM belongs to the root process. **Do not sum tree rows.** Memory defaults to PSS, which apportions shared pages; `*` marks RSS fallback, `~` marks partial coverage, and `?` means unavailable.
-
-The overview uses a matching user cgroup when one is identifiable. Its charged memory includes cache and can differ from process PSS. Detection supports cgroup v1/v2, systemd user slices, login-user groups, namespace mount roots, inherited constraints and cpusets. A shared host/container limit is not presented as a personal allocation. Mixed scopes remain explicit; custom layouts can supply controller paths.
+CPU usage is displayed in cores; memory uses PSS where available. Metric units,
+coverage markers and accounting scopes are described in the
+[metric and snapshot reference](docs/snapshots.md).
 
 ## Install and develop
 
-Download the release archive for `x86_64-unknown-linux-musl` or `aarch64-unknown-linux-musl`, verify `SHA256SUMS`, then install the `ures` executable into a directory on `PATH`. Runtime collection needs Linux `/proc`; cgroup and kernel-log access are optional. No Python or Rust runtime is required. Directory-backed user names use the host `id` command if static libc cannot resolve NSS; numeric UID and current-user queries remain available without it.
+Download a [release archive](https://github.com/flymin/ures/releases) for
+`x86_64-unknown-linux-musl` or `aarch64-unknown-linux-musl`, verify `SHA256SUMS`,
+then place `ures` on your `PATH`. The static executable needs Linux `/proc`
+and no Python or Rust runtime. Cgroup and kernel-log data depend on access permissions.
 
 Build with an existing **Rust 1.99.0** toolchain, rustfmt, Clippy and the matching musl target:
 
 ```bash
-cd ~/local/src/ures
+git clone https://github.com/flymin/ures.git
+cd ures
 ./build.sh
-
-# Select an existing compiler environment explicitly:
-URES_VENV="/path/to/existing-toolchain" ./build.sh
 
 # Standard Cargo workflows are supported too:
 cargo test --locked
 cargo run -- --help
 ```
 
-`build.sh` checks formatting, tests, Clippy, static linkage and CLI/PTY behavior before atomically installing `~/local/bin/ures`. Override `URES_INSTALL_DIR` or `URES_TARGET` as needed. It uses one build job by default, records sanitized output in `.logs/build.log`, remaps private compiler paths and cleans its own temporary build directory. An explicitly supplied `CARGO_TARGET_DIR` is preserved. Toolchain setup and environment files are never changed by the script.
+`build.sh` runs the checks and writes the static executable to
+`target/<target>/release/ures`. Set `URES_INSTALL_DIR` to install it to a
+directory of your choice.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for build and test details.
 
 ## Make the view yours
 
-The first normal invocation creates a fully commented TOML file at `${XDG_CONFIG_HOME}/ures/config.toml`, falling back to `${HOME}/.config/ures/config.toml` when XDG is absent, empty or relative. Existing files are never overwritten. Help, version and `config` commands do not create it or execute checks.
+The first run creates a commented TOML configuration at
+`${XDG_CONFIG_HOME}/ures/config.toml`, or `~/.config/ures/config.toml` by default.
+Use `ures config path` to locate it.
 
 ```bash
 ures config show               # Effective configuration, including selected profile
@@ -124,11 +124,6 @@ Manual values are **configured budgets**, not kernel settings. Detected kernel b
 
 Views choose `tree`, `ps`, `groups`, `oom` or `checks`, an optional display `name`, fields, sort, row count, and optional `include`/`exclude` regexes. An explicit `[views]` selects the available tabs; builtin view keys retain omitted field defaults. Profiles patch/add to that selection. Tree filtering retains ancestor context; inclusive totals still include hidden descendants. Ordered application rules use first-match wins, followed by executable-name grouping. Columns can change titles, widths and hiding priority. Themes support Ratatui color names, RGB hex colors and indexed colors. See the [view reference](docs/views.md), [complete template](config/default.toml) and [profile examples](examples/profiles.toml).
 
-CPU, memory and OOM checks are enabled by default. I/O, threads and FDs are collected when a view needs them or their check is enabled. Thresholds are percentages for CPU/memory, and raw units for other numeric checks. OOM reports new kills separately from cumulative counters; an old kill does not keep the check critical forever.
-
-Kernel logs are read only when the OOM check is enabled or an OOM view is needed:
-any configured TUI tab, or the selected report view.
-
 ## Interactive mode
 
 `ures` creates one tab for every resolved `views` entry. A top-level
@@ -158,19 +153,12 @@ kind = "oom"
 kind = "checks"
 ```
 
-Column widths stay fixed between samples, sorting and filtering. PID reserves
-seven characters and I/O rates eleven, including coverage markers. Commands use
-the remaining width; long values use a Unicode ellipsis (`~` with `--ascii`).
-Resizing the terminal can hide optional columns or compress the layout.
+Column widths and hiding priorities are configurable. The command column fills
+the available space, and long values are truncated to fit the terminal.
 
-The default adapts the [Dracula Classic palette](https://github.com/dracula/dracula-theme#color-palette-oss)
-with brighter secondary text, explicit foreground/background colors and a continuous
-selection. CPU is green, memory yellow, reads cyan and writes orange. Rainbow colors
-are enabled by default for PID/command cells, tied to process identity or group
-name; metrics retain their semantic colors. Tree guides have their own color;
-ancestor context stays dim. Selected rows use one continuous background and
-foreground across cells, separators and trailing space. `NO_COLOR` and
-`--color never` disable colors. Add overrides to your existing config, for example:
+Three built-in themes are available: Dracula, Alucard light and Gruvbox.
+CPU, memory and I/O have distinct colors; optional rainbow colors identify processes.
+`NO_COLOR` and `--color never` disable colors. For example:
 
 ```toml
 [columns.read]
@@ -196,8 +184,8 @@ views, checks, intervals and theme settings. Select one with `--profile work`
 or top-level `default_profile = "work"`. Built-in themes do not create profiles.
 For example, `[profiles.work.theme] name = "gruvbox"` can accompany a work
 profile's other overrides. `ures --profile work --theme light` retains those
-other overrides while selecting the light palette. See [theme/profile precedence
-and migration](docs/themes.md).
+other overrides while selecting the light palette. See the
+[theme and profile reference](docs/themes.md).
 
 | Key | Action |
 | --- | --- |
@@ -212,8 +200,6 @@ and migration](docs/themes.md).
 | p / r | Pause the display / request a fresh sample |
 | R (Shift-r) | Toggle rainbow row colors for this session |
 | ? / q / Esc | Help / exit; any key closes help or details |
-
-Sampling and extensions run outside the input loop. A paused view retains its snapshot and age. Process identity includes its start time so a reused PID does not inherit a selection or CPU baseline. The interface is read-only and restores terminal mode on normal exit, Ctrl-C, termination and panic.
 
 ## Extend the checks
 
@@ -231,16 +217,10 @@ Commands are argument arrays, with no implicit shell. The runner supplies `URES_
 
 See the [check protocol](docs/extensions.md), [JSON Schema](docs/check.schema.json) and [snapshot format](docs/snapshots.md). CLI snapshots and TUI cards use the same check results.
 
-## Measurement boundaries
-
-- CPU is a sample delta, not lifetime `ps %CPU`. Short-lived processes can disappear between samples; cgroup accounting may capture work absent from the process list.
-- PSS coverage and RSS fallback are explicit. Process memory, cgroup charge and inherited shared bounds have different scopes.
-- Logical I/O is counted from observed thread deltas to avoid importing waited-for child history. It is a visible-task lower bound; block-storage counters do not measure complete NFS or disk throughput. FD sums count descriptors, not unique files.
-- OOM history comes from available current-boot dmesg/journal records and can be truncated or inaccessible. Cumulative cgroup counts can outlive retained events. Kernel PIDs are historical and may belong to a different namespace.
-- No root access is required for ordinary use. Inaccessible data stays unknown; the tool does not invoke sudo.
-
 ## Contribute and release
 
-Start with [CONTRIBUTING.md](CONTRIBUTING.md) and the [architecture](docs/architecture.md). Tests use deterministic process/cgroup fixtures, real CLI smoke checks and pseudo-terminals; they do not trigger actual OOMs or modify quotas. The TUI preview is exported from the actual test backend; `cargo run --example preview` provides the corresponding fictional CLI session.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development and testing, and
+[architecture](docs/architecture.md) for the module layout.
 
-CI tests native Linux x86_64/aarch64 musl targets and produces archives with SHA256 checksums and third-party license notices. Matching `v<package-version>` tags enable the prepared release workflow. [CHANGELOG](CHANGELOG.md) · [MIT license](LICENSE).
+Tagged releases provide static Linux x86_64/aarch64 archives, SHA256 checksums
+and third-party license notices. [CHANGELOG](CHANGELOG.md) · [MIT license](LICENSE).
