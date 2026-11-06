@@ -415,4 +415,15 @@ fn layout_is_bounded_at_narrow_and_wide_widths_and_json_roundtrips() {
     let decoded: ures::model::Report = serde_json::from_str(&json).unwrap();
     assert_eq!(decoded.processes[&1001].pss, Some(4 << 30));
     assert_eq!(decoded.summary.cpu_limit.value, Some(4.0));
+    let mut legacy = serde_json::to_value(&report).unwrap();
+    let account = legacy["account"].as_object_mut().unwrap();
+    account.remove("slab_reclaimable");
+    account.remove("zswap");
+    let decoded: ures::model::Report = serde_json::from_value(legacy).unwrap();
+    assert_eq!(decoded.account.slab_reclaimable, None);
+    assert_eq!(decoded.account.zswap, None);
+    assert_eq!(
+        render::memory_gauge(&decoded),
+        render::memory_gauge(&report)
+    );
 }

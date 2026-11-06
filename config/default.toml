@@ -99,6 +99,9 @@ priority = 20
 [theme]
 name = "dracula"
 # cpu = "#50fa7b"
+# memory_cache = "#8be9fd"
+# memory_shared = "#ff79c6"
+# memory_compressed = "#bd93f9"
 # selection_bg = "#44475a"
 # rainbow = true
 

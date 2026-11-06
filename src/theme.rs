@@ -41,6 +41,9 @@ pub struct Theme {
     pub critical: String,
     pub cpu: String,
     pub memory: String,
+    pub memory_cache: String,
+    pub memory_shared: String,
+    pub memory_compressed: String,
     pub tree: String,
     pub read: String,
     pub write: String,
@@ -117,6 +120,9 @@ impl Theme {
             &self.critical,
             &self.cpu,
             &self.memory,
+            &self.memory_cache,
+            &self.memory_shared,
+            &self.memory_compressed,
             &self.tree,
             &self.read,
             &self.write,
@@ -146,5 +152,26 @@ mod tests {
             assert_eq!(theme.name, entry.name);
             theme.validate().unwrap();
         }
+    }
+
+    #[test]
+    fn memory_layer_colors_inherit_defaults_and_accept_explicit_overrides() {
+        let legacy = toml::Value::Table(toml::toml! { name = "dracula" memory = "yellow" });
+        let resolved = Theme::resolve(&legacy, None).unwrap();
+        assert_eq!(resolved.memory, "yellow");
+        assert_eq!(
+            resolved.memory_cache,
+            Theme::builtin("dracula").unwrap().memory_cache
+        );
+        let patch = toml::Value::Table(
+            toml::toml! { memory_cache = "red" memory_shared = "green" memory_compressed = "blue" },
+        );
+        let resolved = Theme::resolve(&patch, Some("light")).unwrap();
+        assert_eq!(resolved.name, "light");
+        assert_eq!(resolved.memory_cache, "red");
+        assert_eq!(resolved.memory_shared, "green");
+        assert_eq!(resolved.memory_compressed, "blue");
+        let invalid = toml::Value::Table(toml::toml! { memory_cache = "not-a-color" });
+        assert!(Theme::resolve(&invalid, None).is_err());
     }
 }

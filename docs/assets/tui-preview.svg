@@ -192,16 +192,16 @@
 <text x="44" y="129" fill="#F1FA8C" font-weight="bold">E</text>
 <text x="54" y="129" fill="#F1FA8C" font-weight="bold">M</text>
 <text x="84" y="129" fill="#FF5555" font-weight="bold">[</text>
-<text x="94" y="129" fill="#FF5555" font-weight="bold">━</text>
-<text x="104" y="129" fill="#FF5555" font-weight="bold">━</text>
-<text x="114" y="129" fill="#FF5555" font-weight="bold">━</text>
-<text x="124" y="129" fill="#FF5555" font-weight="bold">━</text>
-<text x="134" y="129" fill="#FF5555" font-weight="bold">━</text>
-<text x="144" y="129" fill="#FF5555" font-weight="bold">━</text>
-<text x="154" y="129" fill="#FF5555" font-weight="bold">━</text>
-<text x="164" y="129" fill="#FF5555" font-weight="bold">━</text>
-<text x="174" y="129" fill="#FF5555" font-weight="bold">━</text>
-<text x="184" y="129" fill="#FF5555" font-weight="bold">━</text>
+<text x="94" y="129" fill="#F1FA8C">━</text>
+<text x="104" y="129" fill="#F1FA8C">━</text>
+<text x="114" y="129" fill="#F1FA8C">━</text>
+<text x="124" y="129" fill="#F1FA8C">━</text>
+<text x="134" y="129" fill="#FF79C6">━</text>
+<text x="144" y="129" fill="#FF79C6">━</text>
+<text x="154" y="129" fill="#FF79C6">━</text>
+<text x="164" y="129" fill="#8BE9FD">━</text>
+<text x="174" y="129" fill="#8BE9FD">━</text>
+<text x="184" y="129" fill="#8BE9FD">━</text>
 <text x="194" y="129" fill="#FF5555" font-weight="bold">]</text>
 <text x="224" y="129" fill="#FF5555" font-weight="bold">7</text>
 <text x="234" y="129" fill="#FF5555" font-weight="bold">.</text>
@@ -391,17 +391,17 @@
 <text x="64" y="195" fill="#C4C5C3">R</text>
 <text x="74" y="195" fill="#C4C5C3">G</text>
 <text x="84" y="195" fill="#C4C5C3">E</text>
-<text x="104" y="195" fill="#C4C5C3">a</text>
-<text x="114" y="195" fill="#C4C5C3">n</text>
-<text x="124" y="195" fill="#C4C5C3">o</text>
-<text x="134" y="195" fill="#C4C5C3">n</text>
-<text x="154" y="195" fill="#50FA7B">3</text>
-<text x="164" y="195" fill="#50FA7B">.</text>
-<text x="174" y="195" fill="#50FA7B">0</text>
-<text x="184" y="195" fill="#50FA7B">0</text>
-<text x="194" y="195" fill="#50FA7B">G</text>
-<text x="204" y="195" fill="#50FA7B">i</text>
-<text x="214" y="195" fill="#50FA7B">B</text>
+<text x="104" y="195" fill="#C4C5C3">u</text>
+<text x="114" y="195" fill="#C4C5C3">s</text>
+<text x="124" y="195" fill="#C4C5C3">e</text>
+<text x="134" y="195" fill="#C4C5C3">d</text>
+<text x="154" y="195" fill="#F1FA8C">3</text>
+<text x="164" y="195" fill="#F1FA8C">.</text>
+<text x="174" y="195" fill="#F1FA8C">0</text>
+<text x="184" y="195" fill="#F1FA8C">0</text>
+<text x="194" y="195" fill="#F1FA8C">G</text>
+<text x="204" y="195" fill="#F1FA8C">i</text>
+<text x="214" y="195" fill="#F1FA8C">B</text>
 <text x="234" y="195" fill="#C4C5C3">|</text>
 <text x="254" y="195" fill="#C4C5C3">s</text>
 <text x="264" y="195" fill="#C4C5C3">h</text>
@@ -409,42 +409,38 @@
 <text x="284" y="195" fill="#C4C5C3">r</text>
 <text x="294" y="195" fill="#C4C5C3">e</text>
 <text x="304" y="195" fill="#C4C5C3">d</text>
-<text x="324" y="195" fill="#C4C5C3">2</text>
-<text x="334" y="195" fill="#C4C5C3">.</text>
-<text x="344" y="195" fill="#C4C5C3">5</text>
-<text x="354" y="195" fill="#C4C5C3">0</text>
-<text x="364" y="195" fill="#C4C5C3">G</text>
-<text x="374" y="195" fill="#C4C5C3">i</text>
-<text x="384" y="195" fill="#C4C5C3">B</text>
+<text x="324" y="195" fill="#FF79C6">2</text>
+<text x="334" y="195" fill="#FF79C6">.</text>
+<text x="344" y="195" fill="#FF79C6">5</text>
+<text x="354" y="195" fill="#FF79C6">0</text>
+<text x="364" y="195" fill="#FF79C6">G</text>
+<text x="374" y="195" fill="#FF79C6">i</text>
+<text x="384" y="195" fill="#FF79C6">B</text>
 <text x="404" y="195" fill="#C4C5C3">|</text>
-<text x="424" y="195" fill="#C4C5C3">f</text>
-<text x="434" y="195" fill="#C4C5C3">i</text>
-<text x="444" y="195" fill="#C4C5C3">l</text>
-<text x="454" y="195" fill="#C4C5C3">e</text>
-<text x="474" y="195" fill="#C4C5C3">c</text>
-<text x="484" y="195" fill="#C4C5C3">a</text>
-<text x="494" y="195" fill="#C4C5C3">c</text>
-<text x="504" y="195" fill="#C4C5C3">h</text>
-<text x="514" y="195" fill="#C4C5C3">e</text>
-<text x="534" y="195" fill="#FFB86C">2</text>
-<text x="544" y="195" fill="#FFB86C">.</text>
-<text x="554" y="195" fill="#FFB86C">3</text>
-<text x="564" y="195" fill="#FFB86C">2</text>
-<text x="574" y="195" fill="#FFB86C">G</text>
-<text x="584" y="195" fill="#FFB86C">i</text>
-<text x="594" y="195" fill="#FFB86C">B</text>
-<text x="614" y="195" fill="#C4C5C3">|</text>
-<text x="634" y="195" fill="#C4C5C3">p</text>
-<text x="644" y="195" fill="#C4C5C3">e</text>
-<text x="654" y="195" fill="#C4C5C3">a</text>
-<text x="664" y="195" fill="#C4C5C3">k</text>
-<text x="684" y="195" fill="#F1FA8C">8</text>
-<text x="694" y="195" fill="#F1FA8C">.</text>
-<text x="704" y="195" fill="#F1FA8C">0</text>
-<text x="714" y="195" fill="#F1FA8C">0</text>
-<text x="724" y="195" fill="#F1FA8C">G</text>
-<text x="734" y="195" fill="#F1FA8C">i</text>
-<text x="744" y="195" fill="#F1FA8C">B</text>
+<text x="424" y="195" fill="#C4C5C3">c</text>
+<text x="434" y="195" fill="#C4C5C3">a</text>
+<text x="444" y="195" fill="#C4C5C3">c</text>
+<text x="454" y="195" fill="#C4C5C3">h</text>
+<text x="464" y="195" fill="#C4C5C3">e</text>
+<text x="484" y="195" fill="#8BE9FD">2</text>
+<text x="494" y="195" fill="#8BE9FD">.</text>
+<text x="504" y="195" fill="#8BE9FD">3</text>
+<text x="514" y="195" fill="#8BE9FD">2</text>
+<text x="524" y="195" fill="#8BE9FD">G</text>
+<text x="534" y="195" fill="#8BE9FD">i</text>
+<text x="544" y="195" fill="#8BE9FD">B</text>
+<text x="564" y="195" fill="#C4C5C3">|</text>
+<text x="584" y="195" fill="#C4C5C3">p</text>
+<text x="594" y="195" fill="#C4C5C3">e</text>
+<text x="604" y="195" fill="#C4C5C3">a</text>
+<text x="614" y="195" fill="#C4C5C3">k</text>
+<text x="634" y="195" fill="#F1FA8C">8</text>
+<text x="644" y="195" fill="#F1FA8C">.</text>
+<text x="654" y="195" fill="#F1FA8C">0</text>
+<text x="664" y="195" fill="#F1FA8C">0</text>
+<text x="674" y="195" fill="#F1FA8C">G</text>
+<text x="684" y="195" fill="#F1FA8C">i</text>
+<text x="694" y="195" fill="#F1FA8C">B</text>
 <text x="1114" y="195" fill="#8BE9FD">│</text>
 <text x="24" y="217" fill="#8BE9FD">│</text>
 <text x="1114" y="217" fill="#8BE9FD">│</text>

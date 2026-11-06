@@ -4,7 +4,7 @@
 
 ### 从用户概览，找到占用资源的进程树。
 
-![Version](https://img.shields.io/badge/version-0.1.0-8b5cf6)
+![Version](https://img.shields.io/badge/version-0.1.1-8b5cf6)
 ![Rust](https://img.shields.io/badge/Rust-1.99-f97316?logo=rust)
 ![Linux](https://img.shields.io/badge/Linux-x86__64%20%7C%20aarch64-06b6d4)
 ![Static](https://img.shields.io/badge/binary-static-14b8a6)
@@ -50,6 +50,7 @@ TUI 快捷键在界面内按 `?` 查看。
 
 CPU 以核为单位，内存优先使用 PSS。各指标的单位、覆盖标记和统计范围见
 [指标与快照参考](docs/snapshots.md)。
+顶部内存条按 Used、Shared、Compressed、Cache 累计叠加，分别显示 cgroup 全部占用和进程 PSS/RSS 合计。
 
 ## 构建与安装
 

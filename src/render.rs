@@ -537,6 +537,116 @@ pub(crate) fn gauge(ratio: Option<f64>, ascii: bool) -> String {
     )
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MemoryClass {
+    Used,
+    Shared,
+    Compressed,
+    Cache,
+    Free,
+}
+
+impl MemoryClass {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Used => "used",
+            Self::Shared => "shared",
+            Self::Compressed => "compressed",
+            Self::Cache => "cache",
+            Self::Free => "free",
+        }
+    }
+
+    pub fn symbol(self, ascii: bool) -> &'static str {
+        match (self, ascii) {
+            (Self::Free, false) => "·",
+            (Self::Free, true) => "-",
+            (_, false) => "━",
+            (_, true) => "#",
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MemoryLayer {
+    pub class: MemoryClass,
+    pub bytes: u64,
+    pub cumulative: u64,
+}
+
+/// Cgroup equivalents of htop's Used -> Shared -> Compressed -> Cache
+/// cumulative layers. Unclassified charges remain in Used. File cache excludes
+/// shmem; reported reclaimable slab joins Cache. PSS remains a separate total.
+pub fn memory_layers(report: &Report) -> Option<Vec<MemoryLayer>> {
+    let total = report.summary.memory_bytes;
+    if report.summary.memory_source != "cgroup charge" || report.account.memory != Some(total) {
+        return None;
+    }
+    let shared = report.account.shmem?;
+    let cache = report
+        .account
+        .file?
+        .checked_add(report.account.slab_reclaimable.unwrap_or(0))?;
+    let compressed = report.account.zswap;
+    let used = total
+        .checked_sub(cache)?
+        .checked_sub(shared)?
+        .checked_sub(compressed.unwrap_or(0))?;
+    let mut cumulative = 0;
+    let mut layers = Vec::new();
+    for (class, bytes) in [
+        (MemoryClass::Used, Some(used)),
+        (MemoryClass::Shared, Some(shared)),
+        (MemoryClass::Compressed, compressed),
+        (MemoryClass::Cache, Some(cache)),
+    ] {
+        if let Some(bytes) = bytes {
+            cumulative += bytes;
+            layers.push(MemoryLayer {
+                class,
+                bytes,
+                cumulative,
+            });
+        }
+    }
+    Some(layers)
+}
+
+/// Draw the outer cumulative layers first, then overlay each inner layer.
+/// Rounding boundaries rather than independent widths keeps the meter bounded.
+pub fn memory_gauge(report: &Report) -> Option<[MemoryClass; 10]> {
+    let layers = memory_layers(report)?;
+    let limit = report
+        .summary
+        .memory_limit
+        .value
+        .filter(|v| v.is_finite() && *v > 0.0)?;
+    let mut cells = [MemoryClass::Free; 10];
+    for layer in layers.iter().rev() {
+        let count = ((layer.cumulative as f64 / limit).clamp(0.0, 1.0) * 10.0).round() as usize;
+        cells[..count].fill(layer.class);
+    }
+    Some(cells)
+}
+
+pub fn memory_details(report: &Report) -> Vec<(&'static str, Option<u64>, MemoryClass)> {
+    memory_layers(report).map_or_else(
+        || {
+            vec![
+                ("anon", report.account.anon, MemoryClass::Used),
+                ("shared", report.account.shmem, MemoryClass::Shared),
+                ("cache", report.account.file, MemoryClass::Cache),
+            ]
+        },
+        |layers| {
+            layers
+                .into_iter()
+                .map(|layer| (layer.class.label(), Some(layer.bytes), layer.class))
+                .collect()
+        },
+    )
+}
+
 pub fn summary(report: &Report, ascii: bool) -> Vec<String> {
     let s = &report.summary;
     let cpu = s.cpu_limit.value.map(|v| s.cpu_cores / v);
@@ -563,7 +673,15 @@ pub fn summary(report: &Report, ascii: bool) -> Vec<String> {
         ),
         format!(
             "MEM  {}  {} / {}  {}  [{}]",
-            gauge(mem, ascii),
+            memory_gauge(report)
+                .map(|cells| format!(
+                    "[{}]",
+                    cells
+                        .iter()
+                        .map(|class| class.symbol(ascii))
+                        .collect::<String>()
+                ))
+                .unwrap_or_else(|| gauge(mem, ascii)),
             util::size(s.memory_bytes),
             s.memory_limit
                 .value
@@ -595,13 +713,12 @@ pub fn summary(report: &Report, ascii: bool) -> Vec<String> {
     ];
     if report.account.memory.is_some() {
         let show = |v: Option<u64>| v.map_or_else(|| "?".into(), util::size);
-        lines.push(format!(
-            "CHARGE anon {} | shared {} | file cache {} | peak {}",
-            show(report.account.anon),
-            show(report.account.shmem),
-            show(report.account.file),
-            show(report.account.peak)
-        ));
+        let mut details = memory_details(report)
+            .into_iter()
+            .map(|(label, value, _)| format!("{label} {}", show(value)))
+            .collect::<Vec<_>>();
+        details.push(format!("peak {}", show(report.account.peak)));
+        lines.push(format!("CHARGE {}", details.join(" | ")));
     }
     if s.cpu_limit.source == "configured budget" || s.memory_limit.source == "configured budget" {
         lines.push(format!(
@@ -807,6 +924,135 @@ pub fn colorize(text: &str, status: Status, config: &config::Config, color: bool
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn memory_meter_uses_cumulative_htop_categories_without_adding_process_pss() {
+        let mut report = crate::test_support::report();
+        report.summary.memory_bytes = 8 << 30;
+        report.summary.memory_limit.value = Some((10_u64 << 30) as f64);
+        report.account.memory = Some(8 << 30);
+        report.account.file = Some(3 << 30);
+        report.account.shmem = Some(1 << 30);
+        report.account.slab_reclaimable = Some(1 << 30);
+        report.account.zswap = Some(1 << 30);
+        report.summary.processes.mem = 5 << 30;
+        let layers = memory_layers(&report).unwrap();
+        assert_eq!(
+            layers
+                .iter()
+                .map(|layer| (layer.class, layer.bytes >> 30, layer.cumulative >> 30))
+                .collect::<Vec<_>>(),
+            vec![
+                (MemoryClass::Used, 2, 2),
+                (MemoryClass::Shared, 1, 3),
+                (MemoryClass::Compressed, 1, 4),
+                (MemoryClass::Cache, 4, 8),
+            ]
+        );
+        let cells = memory_gauge(&report).unwrap();
+        assert_eq!(
+            cells,
+            [
+                MemoryClass::Used,
+                MemoryClass::Used,
+                MemoryClass::Shared,
+                MemoryClass::Compressed,
+                MemoryClass::Cache,
+                MemoryClass::Cache,
+                MemoryClass::Cache,
+                MemoryClass::Cache,
+                MemoryClass::Free,
+                MemoryClass::Free
+            ]
+        );
+        assert_eq!(
+            cells
+                .iter()
+                .map(|class| class.symbol(true))
+                .collect::<String>(),
+            "########--"
+        );
+        assert_eq!(
+            cells
+                .iter()
+                .map(|class| class.symbol(false))
+                .collect::<String>(),
+            "━━━━━━━━··"
+        );
+        let text = summary(&report, true);
+        assert!(
+            text.iter()
+                .any(|line| line.starts_with("MEM  [########--]"))
+        );
+        assert!(text.iter().any(|line| {
+            line.contains("used 2.00GiB | shared 1.00GiB | compressed 1.00GiB | cache 4.00GiB")
+        }));
+        report.account.zswap = None;
+        report.account.slab_reclaimable = None;
+        assert_eq!(
+            memory_gauge(&report)
+                .unwrap()
+                .iter()
+                .map(|class| class.symbol(true))
+                .collect::<String>(),
+            "########--"
+        );
+        assert!(
+            !memory_details(&report)
+                .iter()
+                .any(|(name, _, _)| *name == "compressed")
+        );
+    }
+
+    #[test]
+    fn memory_meter_rejects_unknown_or_inconsistent_breakdowns_and_bounds_its_width() {
+        let report = crate::test_support::report();
+        for invalid in ["shared", "cache", "total", "source", "overflow"] {
+            let mut changed = report.clone();
+            match invalid {
+                "shared" => changed.account.shmem = None,
+                "cache" => changed.account.file = None,
+                "total" => changed.account.memory = None,
+                "source" => changed.summary.memory_source = "visible process PSS/RSS".into(),
+                "overflow" => changed.account.file = Some(u64::MAX),
+                _ => unreachable!(),
+            }
+            assert!(memory_layers(&changed).is_none());
+            assert!(memory_gauge(&changed).is_none());
+        }
+        for limit in [
+            None,
+            Some(0.0),
+            Some(-1.0),
+            Some(f64::NAN),
+            Some(f64::INFINITY),
+        ] {
+            let mut changed = report.clone();
+            changed.summary.memory_limit.value = limit;
+            assert!(memory_gauge(&changed).is_none());
+        }
+        for (total, shared, cache, limit, expected) in [
+            (0, 0, 0, 10.0, "----------"),
+            (10, 0, 0, 10.0, "##########"),
+            (10, 0, 10, 10.0, "##########"),
+            (20, 0, 10, 5.0, "##########"),
+        ] {
+            let mut changed = report.clone();
+            changed.summary.memory_bytes = total;
+            changed.account.memory = Some(total);
+            changed.account.shmem = Some(shared);
+            changed.account.file = Some(cache);
+            changed.summary.memory_limit.value = Some(limit);
+            let cells = memory_gauge(&changed).unwrap();
+            assert_eq!(
+                cells
+                    .iter()
+                    .map(|class| class.symbol(true))
+                    .collect::<String>(),
+                expected
+            );
+        }
+    }
 
     #[test]
     fn ancestor_context_visits_deep_chains_without_repeated_walks() {

@@ -11,7 +11,7 @@
 <text x="36" y="144" fill="#f6ba70">MEM  [━━━━━━━━━━]  7.82GiB / 8.00GiB  97.7%  [kernel upper bound]</text>
 <text x="36" y="169" fill="#cdd8eb">USER 4 processes | MEM accounting: cgroup charge | process PSS/RSS 5.52GiB (4/4 PSS readable)</text>
 <text x="36" y="194" fill="#74dfdf">CPU throttle 2/20 periods, 18.5ms | OOM 3 cumulative, 0 new this sample</text>
-<text x="36" y="219" fill="#cdd8eb">CHARGE anon 3.00GiB | shared 2.50GiB | file cache 2.32GiB | peak 8.00GiB</text>
+<text x="36" y="219" fill="#cdd8eb">CHARGE used 3.00GiB | shared 2.50GiB | cache 2.32GiB | peak 8.00GiB</text>
 <text x="36" y="244" fill="#cdd8eb"></text>
 <text x="36" y="269" fill="#9bafff"> PID  CPU(c)   TREE MEM   SELF MEM  COMMAND</text>
 <text x="36" y="294" fill="#cdd8eb">1000    1.43    5.02GiB   16.00MiB  [-] sample-shell</text>

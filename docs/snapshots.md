@@ -59,6 +59,28 @@ CPU columns use cores, so `1.00` represents one CPU. Memory columns prefer PSS,
 which apportions shared pages; `*` marks RSS fallback, `~` marks partial coverage,
 and `?` marks unavailable data. FD totals count descriptors.
 
+The memory meter follows htop's cumulative order: **Used → Shared → Compressed
+→ Cache**. Each layer extends the previous one; the outer edge is the complete
+cgroup charge. Shared memory is separated from file cache, reported reclaimable
+slab joins Cache, and compressed memory uses the cgroup's `zswap` counter when
+available. Other charges remain in Used. The total and percentage continue to
+include cache when comparing usage with the selected memory limit.
+Cache contains potentially reclaimable memory; dirty pages need writeback,
+so this category is not an estimate of immediately available memory.
+
+The process PSS/RSS total is displayed separately. Like htop's Used category,
+the meter's Used category is derived from accounting counters rather than by
+adding process PSS. Cgroups do not expose a separate equivalent of the host's
+Buffers counter, so that category is omitted. Missing or inconsistent counters
+fall back to an unclassified total meter. Unknown categories are not reported
+as zero. The additional `account.slab_reclaimable` and `account.zswap` fields
+are optional in schema 1.
+
+The meter retains its slim line style, with colors identifying the layers.
+ASCII mode uses `#` and `-`; monochrome mode keeps the same simple gauge and
+the numeric breakdown. The classifications follow the
+[htop Linux memory meter](https://github.com/htop-dev/htop/blob/main/linux/Platform.c).
+
 CPU and I/O rates use changes between samples. Processes that exit between
 samples may leave unobserved work. Logical I/O uses live-thread counters;
 storage counters describe block I/O and may exclude network filesystem traffic.

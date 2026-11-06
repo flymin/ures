@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.1 — 2026-11-06
+
+- Add cumulative Used, Shared, Compressed and Cache colors to the memory meter,
+  preserving its slim line style and compact overview.
+- Show per-class memory totals alongside the complete cgroup charge and process
+  PSS/RSS total, using the available counters for the selected user.
+- Include reported reclaimable slab in Cache and expose optional reclaimable-slab
+  and zswap counters in snapshots, with compatibility for existing configurations.
+- Add theme overrides for shared, compressed and cached memory.
+- Install builds to `~/.local/bin` by default; `URES_INSTALL_DIR` selects another
+  installation directory.
+
 ## 0.1.0 — 2026-10-21
 
 Initial release of ures, a Linux resource monitor focused on a single user.

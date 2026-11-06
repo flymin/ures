@@ -206,6 +206,41 @@ impl App {
         };
         self.style(color).add_modifier(Modifier::BOLD)
     }
+    fn memory_meter(
+        &self,
+        config: &config::Config,
+        report: &Report,
+        pressure: Style,
+    ) -> Vec<Span<'static>> {
+        if let Some(cells) = render::memory_gauge(report) {
+            let mut spans = vec![Span::styled("[", pressure)];
+            spans.extend(cells.into_iter().map(|class| {
+                Span::styled(
+                    class.symbol(config.ascii),
+                    self.memory_class_style(config, class),
+                )
+            }));
+            spans.push(Span::styled("]", pressure));
+            spans
+        } else {
+            let ratio = report
+                .summary
+                .memory_limit
+                .value
+                .map(|limit| report.summary.memory_bytes as f64 / limit);
+            vec![Span::styled(render::gauge(ratio, config.ascii), pressure)]
+        }
+    }
+    fn memory_class_style(&self, config: &config::Config, class: render::MemoryClass) -> Style {
+        use render::MemoryClass;
+        self.style(match class {
+            MemoryClass::Used => &config.theme.memory,
+            MemoryClass::Shared => &config.theme.memory_shared,
+            MemoryClass::Compressed => &config.theme.memory_compressed,
+            MemoryClass::Cache => &config.theme.memory_cache,
+            MemoryClass::Free => &config.theme.muted,
+        })
+    }
     fn summary(&self, config: &config::Config, compact: bool) -> Vec<Line<'static>> {
         let Some(report) = &self.report else {
             return vec![Line::from("Collecting a user resource snapshot…")];
@@ -256,19 +291,24 @@ impl App {
             } else {
                 &theme.memory
             };
-            lines.push(Line::from(vec![
-                Span::styled(
-                    format!("{label}  "),
-                    self.style(label_color).add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(render::gauge(ratio, config.ascii), style),
+            let mut spans = vec![Span::styled(
+                format!("{label}  "),
+                self.style(label_color).add_modifier(Modifier::BOLD),
+            )];
+            if label == "MEM" {
+                spans.extend(self.memory_meter(config, report, style));
+            } else {
+                spans.push(Span::styled(render::gauge(ratio, config.ascii), style));
+            }
+            spans.extend([
                 Span::styled(format!("  {usage} / {limit}  "), style),
                 Span::styled(
                     ratio.map_or_else(|| "n/a".into(), |v| format!("{:.1}%", v * 100.0)),
                     style,
                 ),
                 Span::styled(format!("  [{source}]"), muted),
-            ]));
+            ]);
+            lines.push(Line::from(spans));
         }
         lines.push(Line::from(vec![
             Span::styled(
@@ -328,14 +368,14 @@ impl App {
         ]));
         if report.account.memory.is_some() {
             let mut spans = vec![Span::styled("CHARGE ", muted)];
-            for (i, (label, value, color)) in [
-                ("anon", report.account.anon, &theme.cpu),
-                ("shared", report.account.shmem, &theme.tree),
-                ("file cache", report.account.file, &theme.warning),
-                ("peak", report.account.peak, &theme.memory),
-            ]
-            .into_iter()
-            .enumerate()
+            for (i, (label, value, class)) in render::memory_details(report)
+                .into_iter()
+                .chain(std::iter::once((
+                    "peak",
+                    report.account.peak,
+                    render::MemoryClass::Used,
+                )))
+                .enumerate()
             {
                 if i > 0 {
                     spans.push(Span::styled(" | ", muted));
@@ -343,7 +383,7 @@ impl App {
                 spans.push(Span::styled(format!("{label} "), muted));
                 spans.push(Span::styled(
                     value.map_or_else(|| "?".into(), util::size),
-                    self.style(color),
+                    self.memory_class_style(config, class),
                 ));
             }
             lines.push(Line::from(spans));
@@ -997,9 +1037,25 @@ mod tests {
             lines[1].spans[1].style.fg,
             Some(color(&config.theme.critical))
         );
-        assert_eq!(lines[2].spans[0].style.fg, Some(color(&config.theme.tree)));
+        let user = lines
+            .iter()
+            .find(|line| {
+                line.spans
+                    .first()
+                    .is_some_and(|span| span.content.starts_with("USER "))
+            })
+            .unwrap();
+        assert_eq!(user.spans[0].style.fg, Some(color(&config.theme.tree)));
+        let throttle = lines
+            .iter()
+            .find(|line| {
+                line.spans
+                    .first()
+                    .is_some_and(|span| span.content.starts_with("CPU throttle "))
+            })
+            .unwrap();
         assert!(
-            lines[3]
+            throttle
                 .spans
                 .iter()
                 .any(|s| s.style.fg == Some(color(&config.theme.warning)))
@@ -1022,6 +1078,68 @@ mod tests {
                     .iter()
                     .any(|c| c.fg == color(expected))
             );
+        }
+    }
+
+    #[test]
+    fn memory_layers_keep_their_colors_and_classic_gauge_style_in_every_display_mode() {
+        for theme in crate::theme::BUILTINS {
+            for ascii in [false, true] {
+                for color in [false, true] {
+                    let mut config =
+                        config::Config::parse_with_theme("", None, Some(theme.name)).unwrap();
+                    config.ascii = ascii;
+                    let mut app = app(&config, color);
+                    let report = app.report.as_mut().unwrap();
+                    report.summary.memory_bytes = 8 << 30;
+                    report.summary.memory_limit.value = Some((10_u64 << 30) as f64);
+                    report.account.memory = Some(8 << 30);
+                    report.account.file = Some(3 << 30);
+                    report.account.shmem = Some(1 << 30);
+                    report.account.slab_reclaimable = Some(1 << 30);
+                    report.account.zswap = Some(1 << 30);
+                    report.summary.processes.mem = 5 << 30;
+                    let report = app.report.as_ref().unwrap();
+                    let spans = app.memory_meter(&config, report, Style::default());
+                    let text = spans
+                        .iter()
+                        .map(|span| span.content.as_ref())
+                        .collect::<String>();
+                    assert_eq!(
+                        text,
+                        if ascii {
+                            "[########--]"
+                        } else {
+                            "[━━━━━━━━··]"
+                        }
+                    );
+                    for (position, expected) in [
+                        (1, &config.theme.memory),
+                        (3, &config.theme.memory_shared),
+                        (4, &config.theme.memory_compressed),
+                        (5, &config.theme.memory_cache),
+                        (9, &config.theme.muted),
+                    ] {
+                        assert_eq!(
+                            spans[position].style.fg,
+                            if color {
+                                expected.parse::<Color>().ok()
+                            } else {
+                                None
+                            }
+                        );
+                    }
+                    let lines = app.summary(&config, false);
+                    assert!(lines[1].to_string().contains("8.00GiB / 10.00GiB"));
+                    assert!(
+                        lines
+                            .iter()
+                            .any(|line| line.to_string().contains("process PSS/RSS 5.00GiB"))
+                    );
+                    let compact = app.summary(&config, true)[0].to_string();
+                    assert_eq!(compact, "CPU 1.93c · MEM 8.00GiB · 4 procs");
+                }
+            }
         }
     }
 

@@ -418,6 +418,8 @@ impl Account {
             result.anon = get("rss", "anon");
             result.shmem = get("shmem", "shmem");
             result.file = get("cache", "file").map(|v| v.saturating_sub(result.shmem.unwrap_or(0)));
+            result.slab_reclaimable = get("slab_reclaimable", "slab_reclaimable");
+            result.zswap = get("zswap", "zswap");
             let events = values(&file("memory.oom_control", "memory.events"));
             result.oom = events.get("oom_kill").copied();
             result.hits = if c.v2 {
@@ -461,6 +463,10 @@ pub struct Stats {
     pub anon: Option<u64>,
     pub shmem: Option<u64>,
     pub file: Option<u64>,
+    #[serde(default)]
+    pub slab_reclaimable: Option<u64>,
+    #[serde(default)]
+    pub zswap: Option<u64>,
     pub oom: Option<u64>,
     pub hits: Option<u64>,
     pub periods: Option<u64>,
@@ -563,7 +569,7 @@ mod tests {
                 put(
                     &user,
                     "memory.stat",
-                    "anon 536870912\nfile 134217728\nshmem 67108864",
+                    "anon 536870912\nfile 134217728\nshmem 67108864\nslab_reclaimable 33554432\nzswap 16777216",
                 );
                 put(&user, "memory.events", "oom_kill 5\nmax 9");
             } else {
@@ -605,6 +611,11 @@ mod tests {
             assert_eq!(stats.limit, Some(8 << 30));
             assert_eq!(stats.cpu_ns, Some(1_500_000_000));
             assert_eq!(stats.file, Some(64 << 20));
+            assert_eq!(
+                stats.slab_reclaimable,
+                if v2 { Some(32 << 20) } else { None }
+            );
+            assert_eq!(stats.zswap, if v2 { Some(16 << 20) } else { None });
             assert_eq!(stats.oom, Some(5));
             assert_eq!(stats.throttle_ns, Some(500000));
             fs::remove_dir_all(root).unwrap();

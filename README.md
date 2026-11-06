@@ -4,7 +4,7 @@
 
 ### Follow the user. Find the process tree.
 
-![Version](https://img.shields.io/badge/version-0.1.0-8b5cf6)
+![Version](https://img.shields.io/badge/version-0.1.1-8b5cf6)
 ![Rust](https://img.shields.io/badge/Rust-1.99-f97316?logo=rust)
 ![Linux](https://img.shields.io/badge/Linux-x86__64%20%7C%20aarch64-06b6d4)
 ![Static](https://img.shields.io/badge/binary-static-14b8a6)
@@ -58,6 +58,8 @@ Press `?` inside the TUI for key bindings.
 CPU usage is displayed in cores; memory uses PSS where available. Metric units,
 coverage markers and accounting scopes are described in the
 [metric and snapshot reference](docs/snapshots.md).
+The overview's memory bar layers Used, Shared, Compressed and Cache, with the
+complete cgroup charge and process PSS/RSS total shown separately.
 
 ## Install and develop
 

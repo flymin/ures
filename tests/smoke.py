@@ -16,6 +16,7 @@ import tomllib
 
 BINARY = str(Path(sys.argv[1]).resolve())
 PANIC = str(Path(sys.argv[2]).resolve()) if len(sys.argv) > 2 else None
+VERSION = tomllib.loads((Path(__file__).resolve().parents[1] / "Cargo.toml").read_text())["package"]["version"]
 
 def run(args, env, code=0):
     try:
@@ -155,7 +156,7 @@ with tempfile.TemporaryDirectory(prefix="ures-smoke-") as folder:
     run(["help", "unknown"], env, 2)
     assert [line.split()[0] for line in run(["config", "themes"], env).splitlines()] == ["dracula", "light", "gruvbox"]
     assert not (root / "xdg").exists(), "help created configuration"
-    assert run(["--version"], env) == "ures 0.1.0\n"
+    assert run(["--version"], env) == f"ures {VERSION}\n"
     for command in ([], ["--view", "io"], ["-i0.1"]):
         result = subprocess.run([BINARY, *command], env=env, text=True, capture_output=True, timeout=10)
         assert result.returncode == 2 and "ures report" in result.stderr, "missing non-terminal mode guidance"

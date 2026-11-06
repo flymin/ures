@@ -2,9 +2,13 @@
 
 The default maps the open-source **Dracula Classic** palette to resource metrics:
 green CPU, yellow memory, cyan reads, orange writes and red critical values.
+The memory meter layers use `memory`, `memory_shared`, `memory_compressed` and
+`memory_cache`. Their defaults are yellow, pink, purple and cyan respectively;
+each can be overridden in `[theme]`.
 Body text uses `#f8f8f2` on `#282a36`. Secondary text and tree guides use a lighter
 foreground/background mix (`#c4c5c3`) instead of the upstream comment color, so
-labels and footers remain readable. Purple is limited to identity colors.
+labels and footers remain readable. Purple accents identify processes and
+compressed memory.
 
 The TUI paints the full foreground/background, including empty cells and popups.
 Selected rows use explicit colors across columns, gaps and line ends. `NO_COLOR`
@@ -29,6 +33,7 @@ want an explicit override; all other colors come from the chosen palette:
 name = "light"
 # Optional overrides:
 # cpu = "#14710a"
+# memory_cache = "#036a96"
 # selection_bg = "#cfcfde"
 # rainbow = false
 ```
